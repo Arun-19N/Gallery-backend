@@ -1,0 +1,107 @@
+# ===================
+# DEPENDENCIES
+# ===================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ===================
+# ENVIRONMENT VARIABLES (IMPORTANT!)
+# ===================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+
+# ===================
+# BUILD OUTPUTS
+# ===================
+/build
+/dist
+/out
+.next/
+.vercel/
+.netlify/
+
+# ===================
+# DATABASES
+# ===================
+*.db
+*.sqlite
+*.sqlite3
+
+# ===================
+# OS FILES
+# ===================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ===================
+# IDE FILES
+# ===================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.idea/
+.classpath
+.project
+.settings/
+*.iml
+
+# ===================
+# LOGS
+# ===================
+logs/
+*.log
+log.txt
+
+# ===================
+# TEMPORARY FILES
+# ===================
+tmp/
+temp/
+*.tmp
+*.temp
+
+# ===================
+# COVERAGE
+# ===================
+coverage/
+.nyc_output/
+
+# ===================
+# SECRETS & KEYS
+# ===================
+*.pem
+*.key
+*.crt
+*.p12
+*.p7b
+*.p7c
+*.p8
+*.cer
+
+# ===================
+# MISC
+# ===================
+*.tgz
+*.rar
+*.zip
+*.7z
+*.gz
+*.tar
+*.swp
+.DS_Store
