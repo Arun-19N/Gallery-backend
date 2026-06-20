@@ -6,6 +6,9 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 
+// Import routes
+const authRoutes = require('./routes/authRoutes');
+
 dotenv.config();
 
 const app = express();
@@ -47,10 +50,8 @@ if (!fs.existsSync(uploadDir)) {
 app.use('/uploads', express.static(uploadDir));
 
 // ============ ROUTES ============
-
-// Your routes
-app.use('/api/images', require('./routes/authRoutes.js'));
-app.use('/api/auth', require('./routes/authRoutes.js'));
+app.use('/api/auth', authRoutes);
+app.use('/api/images', authRoutes);
 
 // Test route
 app.get('/', (req, res) => {
@@ -67,22 +68,36 @@ app.get('/api/health', (req, res) => {
 });
 
 // ============ DATABASE CONNECTION ============
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-.then(() => {
-    console.log("✅ Connected to MongoDB");
-})
-.catch((err) => {
-    console.error("❌ Error connecting to MongoDB:", err);
-    process.exit(1);
-});
+const connectDB = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 30000,
+            socketTimeoutMS: 45000,
+        });
+        console.log("✅ Connected to MongoDB");
+        return true;
+    } catch (err) {
+        console.error("❌ Error connecting to MongoDB:", err.message);
+        return false;
+    }
+};
 
-// ============ START SERVER ============
-app.listen(PORT, () => {
-    console.log(`🚀 Server is running on port ${PORT}`);
-    console.log(`📍 http://localhost:${PORT}`);
-});
+// Start server only after DB connection
+const startServer = async () => {
+    const connected = await connectDB();
+    if (connected) {
+        app.listen(PORT, () => {
+            console.log(`🚀 Server is running on port ${PORT}`);
+            console.log(`📍 http://localhost:${PORT}`);
+        });
+    } else {
+        console.log("❌ Failed to connect to MongoDB. Server not started.");
+        process.exit(1);
+    }
+};
+
+startServer();
 
 module.exports = app;
