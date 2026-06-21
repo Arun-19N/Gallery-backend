@@ -1,4 +1,3 @@
-
 const asyncHandler = require('express-async-handler');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -25,14 +24,14 @@ const register = asyncHandler(async (req, res) => {
     return;
   }
 
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
-
+  // ✅ FIX: removed manual bcrypt hashing here.
+  // The pre('save') hook in User.js already hashes the password.
+  // Hashing it here too caused a double-hash bug that broke every login.
   const user = await User.create({
     name,
     originalName,
     email,
-    password: hashedPassword,
+    password, // plain password — hashed once by the model's pre-save hook
   });
 
   if (user) {
@@ -61,7 +60,7 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new Error('Invalid credentials');
   }
 
-  sendTokenResponse(res, user, 200); // ✅ only one response now
+  sendTokenResponse(res, user, 200); // only one response
 });
 
 // @desc    Get current user
@@ -75,10 +74,12 @@ const getMe = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/logout
 // @access  Public or Private
 const logoutUser = asyncHandler(async (req, res) => {
+  // ✅ FIX: clearCookie options must match the options used when the
+  // cookie was originally set, or the browser won't actually clear it.
   res.clearCookie('token', {
     httpOnly: true,
-    sameSite: 'Lax',
-    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'none',
+    secure: true,
   });
   res.status(200).json({ message: 'Logged out successfully' });
 });
@@ -87,10 +88,13 @@ const logoutUser = asyncHandler(async (req, res) => {
 const sendTokenResponse = (res, user, statusCode) => {
   const token = generateToken(user._id);
 
+  // ✅ FIX: sameSite must be 'none' (with secure: true) for the cookie
+  // to be sent on cross-domain requests, since the frontend (localhost)
+  // and backend (vercel.app) are on different domains.
   res.cookie('token', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Lax',
+    secure: true,
+    sameSite: 'none',
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   });
 
@@ -112,22 +116,15 @@ const getUserById = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('User not found');
   }
-res.status(200).json({
-  name: user.name && user.name.trim().length > 0 ? user.name : user.originalName,
-  originalName: user.originalName,
-  imgUrl: user.imgUrl || null,
-  bio: user.bio || null
+  res.status(200).json({
+    name: user.name && user.name.trim().length > 0 ? user.name : user.originalName,
+    originalName: user.originalName,
+    imgUrl: user.imgUrl || null,
+    bio: user.bio || null
+  });
 });
-});
 
-
-
-
-
-
-
-
-/// img uploade 
+/// img uploade
 
 const uploadProfileImage = asyncHandler(async (req, res) => {
   const userId = req.params.id;
@@ -158,7 +155,6 @@ const uploadProfileImage = asyncHandler(async (req, res) => {
   res.status(200).json({ imgUrl: user.imgUrl });
 });
 
-
 // Remove profile image
 const removeImage = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
@@ -176,7 +172,6 @@ const removeImage = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Image removed' });
 });
 
-
 // PUT /auth/user/:id/bio
 const updateBio = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -191,18 +186,10 @@ const updateBio = asyncHandler(async (req, res) => {
   }
 });
 
-
 // PUT /api/auth/user/:id/name
 const updateUserName = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
-
-  // Don't allow empty or too-short names if needed.
-  // if (!name ) {
-  //   res.status(400);
-  //   throw new Error("Name is required and must be at least 2 characters.");
-  // }
-
 
   const user = await User.findByIdAndUpdate(
     id,
@@ -213,16 +200,11 @@ const updateUserName = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error("User not found");
   }
- res.status(200).json({
-  name: user.name && user.name.trim().length > 0 ? user.name : user.originalName,
-  originalName: user.originalName
+  res.status(200).json({
+    name: user.name && user.name.trim().length > 0 ? user.name : user.originalName,
+    originalName: user.originalName
+  });
 });
-});
-
-
-
-
-
 
 module.exports = {
   register,
