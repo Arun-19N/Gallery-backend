@@ -51,18 +51,17 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ email });
   if (!user) {
-    res.status(400).json({ message: 'User not found' });
+    res.status(400);
     throw new Error('User not found');
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    res.status(401).json({ message: 'Check your  password' });
+    res.status(401);
     throw new Error('Invalid credentials');
   }
 
-  sendTokenResponse(res, user, 200);
-  res.status(200).json({ message: 'Login successful' , userId: user._id });
+  sendTokenResponse(res, user, 200); // ✅ only one response now
 });
 
 // @desc    Get current user
