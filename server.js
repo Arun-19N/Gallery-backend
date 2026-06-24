@@ -6,6 +6,9 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 
+
+require('dotenv').config();
+
 // Import routes
 const authRoutes = require('./routes/authRoutes');
 
